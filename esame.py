@@ -60,7 +60,9 @@ class CSVFile:
                         
                     # Aggiungo alla lista gli elementi di questa linea
                     data.append(elements)
-            
+                    
+            for osservazione in data:   #trasformo in numerica ogni osservazione riguardo al numero di passeggeri
+                osservazione[1] = int(osservazione[1])
             # Chiudo il file
             my_file.close()
             
@@ -140,39 +142,37 @@ class CSVTimeSeriesFile:
             # Quando ho processato tutte le righe, ritorno i dati
             return data
         
-def find_min_max(time_series)->dict:
+def find_min_max(time_series) -> dict:
     diz = {}
-    mese_max = [None]
-    mese_min = [None]
-    anno = 0
-    max_pass = -1
-    min_pass = 999999
-    for i in range(0, len(time_series)):
-        if time_series[i][0][0:4] == anno:
-            if (max_pass < time_series[i][1]):
+    mese_max = []
+    mese_min = []
+    max_pass = time_series[0][1]
+    min_pass = time_series[0][1]
+    anno = time_series[0][0][0:4]
+    
+    for i in range(len(time_series)):
+        anno_nuovo = time_series[i][0][0:4]
+        
+        if anno_nuovo == anno:
+            if max_pass < time_series[i][1]:
                 max_pass = time_series[i][1]
-                mese_max.clear()
+                mese_max = [time_series[i][0][-2:]]
+            elif max_pass == time_series[i][1]:
                 mese_max.append(time_series[i][0][-2:])
-            elif (max_pass == time_series[i][1]):
-                print('Il mese uguale che viene aggiunto è: {}'.format(time_series[i][0][-2:]))
-                mese_max.append(time_series[i][0][-2:])   
-            if (min_pass > time_series[i][1]):
+                
+            if min_pass > time_series[i][1]:
                 min_pass = time_series[i][1]
-                mese_min.clear()
+                mese_min = [time_series[i][0][-2:]]
+            elif min_pass == time_series[i][1]:
                 mese_min.append(time_series[i][0][-2:])
-            elif (min_pass == time_series[i][1]):
-                print('Il mese uguale che viene aggiunto è: {}'.format(time_series[i][0][-2:]))
-                mese_max.append(time_series[i][0][-2:])   
-
-
         else:
-
-            diz[anno] = {'max': mese_max, 'min': mese_min}
-            mese_max = [None]
-            mese_min = [None]
-            anno = time_series[i][0][0:4]
+            diz[anno] = {'min': mese_min, 'max': mese_max}
+            mese_max = [time_series[i][0][-2:]]
+            mese_min = [time_series[i][0][-2:]]
+            anno = anno_nuovo
             max_pass = time_series[i][1]
             min_pass = time_series[i][1]
-    return diz
-
     
+    diz[anno] = {'max': mese_max, 'min': mese_min}  # aggiungo massimo e minimo dell'ultimo anno
+
+    return diz
