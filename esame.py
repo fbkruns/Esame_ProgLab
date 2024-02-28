@@ -141,16 +141,30 @@ class CSVTimeSeriesFile:
             return data
         
 def find_min_max(time_series)->dict:
-    
+    diz = {}
+    mese_max = [None]
+    anno = 0
+    max_pass = -1
     for i in range(0, len(time_series)):
-        anno = time_series[i][0][0:4]
-        max_month = time_series[i][0][-2:]
-        print('Anno: {}'.format(anno))
-        print('Mese: {}'.format(max_month))
         if time_series[i][0][0:4] == anno:
-            max_pass = max(max_pass, time_series[i][1])
-            max_month = max(max_month, time_series[i][0][-2:])
-        else:            
+            print(type((time_series[i][1])))
+            if (max_pass < time_series[i][1]):
+                print('i = {}'.format(i))
+                max_pass = time_series[i][1]
+                mese_max.clear()
+                mese_max.append(time_series[i][0][-2:])
+            elif (max_pass == time_series[i][1]):
+                print('Il mese uguale che viene aggiunto è: {}'.format(time_series[i][0][-2:]))
+                mese_max.append(time_series[i][0][-2:])                
+            print("IF")
+        else:
+
+            diz[anno] = {'max': mese_max}
+            print('Dizionario: {}'.format(diz))   
+            mese_max = [None]
             anno = time_series[i][0][0:4]
             max_pass = time_series[i][1]
+            print("ELSE")
+    return diz
+
     
