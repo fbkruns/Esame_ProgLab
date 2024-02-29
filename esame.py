@@ -81,8 +81,6 @@ class CSVTimeSeriesFile:
                 else:
                     continue
 
-
-                # if elements[0][]
                     # Aggiungo alla lista gli elementi di questa linea
                 data.append(elements)
             
