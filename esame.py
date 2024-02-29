@@ -1,86 +1,6 @@
 class ExamException(Exception):
     pass
 
-#==============================
-#  Classe per file CSV
-#==============================
-
-
-class CSVFile:
-
-    def __init__(self, name):
-        
-        # Setto il nome del file
-        self.name = name
-        
-        
-        # Provo ad aprirlo e leggere una riga
-        self.can_read = True
-        try:
-            my_file = open(self.name, 'r')
-            my_file.readline()
-        except Exception as e:
-            self.can_read = False
-            print('Errore in apertura del file: "{}"'.format(e))
-
-
-    def get_data(self):
-        
-        if not self.can_read:
-            
-            # Se nell'init ho settato can_read a False vuol dire che
-            # il file non poteva essere aperto o era illeggibile
-            print('Errore, file non aperto o illeggibile')
-            
-            # Esco dalla funzione tornando "niente".
-            return None
-
-        else:
-            # Inizializzo una lista vuota per salvare tutti i dati
-            data = []
-    
-            # Apro il file
-            my_file = open(self.name, 'r')
-
-            # Leggo il file linea per linea
-            for line in my_file:
-                
-                # Faccio lo split di ogni linea sulla virgola
-                elements = line.split(',')
-                
-                # Posso anche pulire il carattere di newline 
-                # dall'ultimo elemento con la funzione strip():
-                elements[-1] = elements[-1].strip()
-                
-                # p.s. in realta' strip() toglie anche gli spazi
-                # bianchi all'inizio e alla fine di una stringa.
-    
-                # Se NON sto processando l'intestazione...
-                if elements[0] != 'Date':
-                        
-                    # Aggiungo alla lista gli elementi di questa linea
-                    data.append(elements)
-                    
-            for osservazione in data:   #trasformo in numerica ogni osservazione riguardo al numero di passeggeri
-                osservazione[1] = int(osservazione[1])
-            # Chiudo il file
-            my_file.close()
-            
-            # Quando ho processato tutte le righe, ritorno i dati
-            return data
-
-#==============================
-#  Esempio di utilizzo
-#==============================
-
-#mio_file = CSVFile(name='shampoo_sales.csv')
-#print('Nome del file: "{}"'.format(mio_file.name))
-#print('Dati contenuti nel file: "{}"'.format(mio_file.get_data()))
-
-#mio_file_numerico = NumericalCSVFile(name='shampoo_sales.csv')
-#print('Nome del file: "{}"'.format(mio_file_numerico.name))
-#print('Dati contenuti nel file: "{}"'.format(mio_file_numerico.get_data()))
-    
 class CSVTimeSeriesFile:
 
     def __init__(self, name):
@@ -94,13 +14,13 @@ class CSVTimeSeriesFile:
         try:
             my_file = open(self.name, 'r')
             my_file.readline()
-        except Exception as e:
+        except ExamException as e:
             self.can_read = False
             print('Errore in apertura del file: "{}"'.format(e))
 
 
     def get_data(self):
-        
+
         if not self.can_read:
             
             # Se nell'init ho settato can_read a False vuol dire che
@@ -126,21 +46,66 @@ class CSVTimeSeriesFile:
                 # Posso anche pulire il carattere di newline 
                 # dall'ultimo elemento con la funzione strip():
                 elements[-1] = elements[-1].strip()
+
+                # Per controllare che il mese sia valido, splitto la stringa ed effettuo dei controlli. 
+                # In particolare, controllo che siano effettivamente numeri (e poi validi). Non posso controllare 
+                # direttamente se il mese sia un numero vedendo se converte in intero, in quanto i numeri che iniziano
+                # per 0 non vengono riconosciuti come tali
                 
-                # p.s. in realta' strip() toglie anche gli spazi
-                # bianchi all'inizio e alla fine di una stringa.
-    
                 # Se NON sto processando l'intestazione...
-                if elements[0] != 'Date':
-                        
+                if elements[0] != 'date':
+                    annomese = elements[0].split('-')
+                    anno = annomese[0]
+                    mese = annomese[1]
+                try:
+                    int(anno)
+                except Exception:
+                    continue
+
+                # Verifichiamo che la lunghezza della stringa mese sia plausibile (2 caratteri)
+
+                if(len(mese)!=2):
+                    continue
+
+                # Controlliamo di avere effettivamente un mese, quindi 1 o 0 alla prima cifra, non doppio 0,
+                # e 1 o 2 se la prima cifra è 1
+                if(mese[0]=='1'):
+                    try:
+                        if(int(mese[-1])>2):
+                            continue
+                    except Exception:
+                        continue
+                elif(mese[0]=='0'):
+                    if(mese[1]=='0'):
+                        continue
+                else:
+                    continue
+
+
+                # if elements[0][]
                     # Aggiungo alla lista gli elementi di questa linea
-                    data.append(elements)
+                data.append(elements)
             
             # Chiudo il file
             my_file.close()
             
+            # Alzo le eccezioni per i seguenti casi limite:
+            if(len(data) == 0):
+                raise ExamException('Errore, lista valori vuota')
+            
+            if(len(data[1]) == 0):
+                raise ExamException('Errore, lista valori vuota')
+            
+            if(len(data[1]) == 0):
+                raise ExamException('Errore, lista valori vuota')
+            
+
+
+            for osservazione in data:   #trasformo in numerica ogni osservazione riguardo al numero di passeggeri
+                osservazione[1] = int(osservazione[1])
             # Quando ho processato tutte le righe, ritorno i dati
             return data
+
         
 def find_min_max(time_series) -> dict:
     diz = {}
