@@ -62,10 +62,23 @@ class CSVTimeSeriesFile:
                         if charachter == " ":
                             continue
 
+                # Controllo che il numero di passeggeri sia un numero intero: 
+                
+                try:
+                    int(elements[1])
+                except Exception:
+                    continue
+
+                if (float(elements[1]) != int(elements[1])):
+                    continue
+
+                # Controllo che l'anno sia un numero intero
 
                 try:
                     int(anno)
                 except Exception:
+                    continue
+                if (float(anno) != int(anno)):
                     continue
                 
                 # Verifichiamo che la lunghezza della stringa mese sia plausibile (2 caratteri)
