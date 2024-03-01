@@ -14,10 +14,9 @@ class CSVTimeSeriesFile:
         try:
             my_file = open(self.name, 'r')
             my_file.readline()
-        except Exception:
+        except Exception as e:
             self.can_read = False
-            raise ExamException('Non è stato possibile aprire il file o leggere il file!')
-
+            print('Errore in apertura del file: "{}"'.format(e))
 
     def get_data(self):
 
@@ -46,15 +45,24 @@ class CSVTimeSeriesFile:
                 #Se non ci sono almeno due campi, posso passare alla riga successiva                
                 if(len(elements) < 2):
                     continue
-                # Posso anche pulire il carattere di newline 
-                # dall'ultimo elemento con la funzione strip():
-                elements[-1] = elements[-1].strip()                
-                
+                # Pulisco gli elementi che mi interessano
+                # con la funzione strip():
+                elements[1] = elements[1].strip()                
+                elements[0] = elements[0].strip()
+
                 # Se NON sto processando l'intestazione...
                 if elements[0] != 'date':
                     annomese = elements[0].split('-')
                     anno = annomese[0]
                     mese = annomese[1]
+
+                # Per saltare le righe contenenti degli spazi bianchi:
+                for string in elements[0:2]:
+                    for charachter in string:
+                        if charachter == " ":
+                            continue
+
+
                 try:
                     int(anno)
                 except Exception:
@@ -81,7 +89,10 @@ class CSVTimeSeriesFile:
                 else:
                     continue
                 
-                # Per quanto riguarda gli anni ignoriamo quelli precedenti all'invenzione  
+                # Per quanto riguarda gli anni non poniamo limiti particolari, anche se
+                # ovviamente per lo specifico esempio degli aerei ce ne sarebbero, tranne uno:
+                if anno == '0':
+                    continue
 
                 # Aggiungo alla lista gli elementi rilevanti (mese,anno) di questa linea 
                 data.append(elements[0:2])
@@ -122,7 +133,7 @@ class CSVTimeSeriesFile:
             return data
 
         
-def find_min_max(time_series) -> dict:
+def find_min_max(time_series):
     diz = {}
     mese_max = []
     mese_min = []
