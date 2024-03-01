@@ -14,9 +14,9 @@ class CSVTimeSeriesFile:
         try:
             my_file = open(self.name, 'r')
             my_file.readline()
-        except ExamException as e:
+        except Exception:
             self.can_read = False
-            print('Errore in apertura del file: "{}"'.format(e))
+            raise ExamException('Non è stato possibile aprire il file o leggere il file!')
 
 
     def get_data(self):
@@ -36,21 +36,19 @@ class CSVTimeSeriesFile:
     
             # Apro il file
             my_file = open(self.name, 'r')
-
+            
             # Leggo il file linea per linea
             for line in my_file:
                 
                 # Faccio lo split di ogni linea sulla virgola
                 elements = line.split(',')
                 
+                #Se non ci sono almeno due campi, posso passare alla riga successiva                
+                if(len(elements) < 2):
+                    continue
                 # Posso anche pulire il carattere di newline 
                 # dall'ultimo elemento con la funzione strip():
-                elements[-1] = elements[-1].strip()
-
-                # Per controllare che il mese sia valido, splitto la stringa ed effettuo dei controlli. 
-                # In particolare, controllo che siano effettivamente numeri (e poi validi). Non posso controllare 
-                # direttamente se il mese sia un numero vedendo se converte in intero, in quanto i numeri che iniziano
-                # per 0 non vengono riconosciuti come tali
+                elements[-1] = elements[-1].strip()                
                 
                 # Se NON sto processando l'intestazione...
                 if elements[0] != 'date':
@@ -61,44 +59,63 @@ class CSVTimeSeriesFile:
                     int(anno)
                 except Exception:
                     continue
-
+                
                 # Verifichiamo che la lunghezza della stringa mese sia plausibile (2 caratteri)
+                # Nel caso il mese sia incorrettamente registrato con una sola cifra, la riga
+                # sarà ignorata.
 
                 if(len(mese)!=2):
                     continue
 
                 # Controlliamo di avere effettivamente un mese, quindi 1 o 0 alla prima cifra, non doppio 0,
                 # e 1 o 2 se la prima cifra è 1
-                if(mese[0]=='1'):
+                if(mese[0] == '1'):
                     try:
-                        if(int(mese[-1])>2):
+                        if(int(mese[-1]) > 2):
                             continue
                     except Exception:
                         continue
-                elif(mese[0]=='0'):
-                    if(mese[1]=='0'):
+                elif(mese[0] == '0'):
+                    if(mese[1] == '0'):
                         continue
                 else:
                     continue
+                
+                # Per quanto riguarda gli anni ignoriamo quelli precedenti all'invenzione  
 
-                    # Aggiungo alla lista gli elementi di questa linea
-                data.append(elements)
-            
+                # Aggiungo alla lista gli elementi rilevanti (mese,anno) di questa linea 
+                data.append(elements[0:2])
+                
+                # Per rendere meno intricato il codice, controllo alla fine se ci sono
+                # eccezioni da alzare relative ai timestamps:
+
             # Chiudo il file
             my_file.close()
             
-            # Alzo le eccezioni per i seguenti casi limite:
             if(len(data) == 0):
                 raise ExamException('Errore, lista valori vuota')
             
-            if(len(data[1]) == 0):
-                raise ExamException('Errore, lista valori vuota')
+            # Per rendere meno intricato il codice, controllo alla fine se ci sono
+            # eccezioni da alzare relative ai timestamps:
+                        
+            anno_vecchio = int(data[0][0][0:4])
+            mese_vecchio = (data[0][0][5:])
+            for lista in data[1:]:
+                anno_corrente = int(lista[0][0:4])
+                mese_corrente = (lista[0][5:])
+                if(anno_corrente == anno_vecchio and mese_corrente == mese_vecchio):
+                    raise ExamException('La serie temporale contiene un timestamp duplicato! Ci sono due {}'.format(str(anno_corrente) + '-' + mese_corrente))
+                if(anno_corrente < anno_vecchio):
+                    raise ExamException('La serie temporale non è ordinata! Si veda l\'osservazione {} e la precedente'.format((str(anno_corrente) + '-' + mese_corrente)))
+                if(anno_corrente == anno_vecchio): 
+                    if(mese_corrente[0] == mese_vecchio[0]):
+                        if(int(mese_corrente[1]) < int(mese_vecchio[1])):
+                            raise ExamException('La serie temporale non è ordinata! Si veda l\'osservazione {} e la precedente'.format((str(anno_corrente) + '-' + mese_corrente)))
+                    if(int(mese_corrente[0]) < int(mese_vecchio[0])):
+                        raise ExamException('La serie temporale non è ordinata! Si veda l\'osservazione {} e la precedente'.format((str(anno_corrente) + '-' + mese_corrente)))
+                anno_vecchio = anno_corrente
+                mese_vecchio = mese_corrente
             
-            if(len(data[1]) == 0):
-                raise ExamException('Errore, lista valori vuota')
-            
-
-
             for osservazione in data:   #trasformo in numerica ogni osservazione riguardo al numero di passeggeri
                 osservazione[1] = int(osservazione[1])
             # Quando ho processato tutte le righe, ritorno i dati
