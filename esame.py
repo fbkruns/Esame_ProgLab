@@ -143,6 +143,11 @@ def find_min_max(time_series):
     min_pass = time_series[0][1]
     anno = time_series[0][0][0:4]
     
+    # Inizialmente, massimo e minimo sono dati dal primo valore di un dato anno che troviamo.
+    # Finchè non troviamo un'osservazione relativa ad un anno successivo, continuiamo con i
+    # confronti, ed eventualmente aggiorniamo minimo e massimo
+    # Ripeto l'inizializzazione per ogni nuovo anno
+
     for i in range(len(time_series)):
         anno_nuovo = time_series[i][0][0:4]
         
