@@ -134,7 +134,9 @@ class CSVTimeSeriesFile:
 
         
 def find_min_max(time_series):
-    diz = {}
+    anno_inizio = int(time_series[0][0][0:4])
+    anno_fine = int(time_series[-1][0][0:4])
+    diz = {key: {} for key in range(anno_inizio, anno_fine + 1)} #righe aggiunte qualora fosse necessario avere anche i dizionari vuoti
     mese_max = []
     mese_min = []
     max_pass = time_series[0][1]
